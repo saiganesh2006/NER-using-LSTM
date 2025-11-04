@@ -46,23 +46,19 @@ Display predictions or plot loss curves.
 ```python
 # Model definition
 class BiLSTMTagger(nn.Module):
-    def __init__(self, vocab_size, tagset_size, embedding_dim=100, hidden_dim=256):
-        super(BiLSTMTagger, self).__init__()
-        self.hidden_dim = hidden_dim
-        self.embedding_dim = embedding_dim
+  def __init__(self, vocab_size, tagset_size, embedding_dim = 50, hidden_dim = 100):
+    super(BiLSTMTagger, self).__init__()
+    self.embedding = nn.Embedding(vocab_size, embedding_dim)
+    self.dropout = nn.Dropout(0,1)
+    self.lstm = nn.LSTM(embedding_dim, hidden_dim, bidirectional=True, batch_first=True)
+    self.fc = nn.Linear(hidden_dim * 2, tagset_size)
 
-        self.word_embeddings = nn.Embedding(vocab_size, embedding_dim)
-
-        self.lstm = nn.LSTM(embedding_dim, hidden_dim, bidirectional=True, batch_first=True)
-
-        self.hidden2tag = nn.Linear(hidden_dim * 2, tagset_size)
-
-    def forward(self, input_ids):
-        embeddings = self.word_embeddings(input_ids)
-        lstm_out, _ = self.lstm(embeddings)
-        tag_space = self.hidden2tag(lstm_out)
-        return tag_space
-
+  def forward(self, x):
+    x = self.embedding(x)
+    x = self.dropout(x)
+    x, _ = self.lstm(x)
+    return self.fc(x)
+    
 model = BiLSTMTagger(len(words) + 1, len(tags)).to(device)
 loss_fn = nn.CrossEntropyLoss(ignore_index=tag2idx["O"])
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
@@ -103,11 +99,11 @@ def train_model(model, train_loader, test_loader, loss_fn, optimizer, epochs=3):
 
 ### Training Loss, Validation Loss Vs Iteration Plot
 
-<img width="779" height="568" alt="image" src="https://github.com/user-attachments/assets/afb25a97-b2e0-4eb8-90e9-976772a863c4" />
+<img width="793" height="584" alt="image" src="https://github.com/user-attachments/assets/84aeb60d-77d3-4b7d-b5b7-14f1e7e96bfa" />
 
 
 ### Sample Text Prediction
-<img width="398" height="430" alt="image" src="https://github.com/user-attachments/assets/ec30cc70-b0fe-49ea-9cdf-7653e892572b" />
+<img width="510" height="549" alt="image" src="https://github.com/user-attachments/assets/19c38045-9bda-407c-9aac-dfd16e833a1f" />
 
 
 ## RESULT
